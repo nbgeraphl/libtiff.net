@@ -4,7 +4,7 @@
 
 using System;
 using System.Diagnostics;
-
+using System.Globalization;
 using BitMiracle.LibTiff.Classic.Internal;
 
 namespace BitMiracle.LibTiff.Classic
@@ -1392,10 +1392,20 @@ namespace BitMiracle.LibTiff.Classic
                     {
                         if (v[i] != v[0])
                         {
-                            ErrorExt(this, m_clientdata, m_name,
-                                "Cannot handle different per-sample values for field \"{0}\"",
-                                FieldWithTag(dir.tdir_tag).Name);
-                            failed = true;
+                            if (IgnoreDuplicateError?.Contains(dir.tdir_tag) ?? false)
+                            {
+                                WarningExt(this, m_clientdata, m_name,
+                                    "Cannot handle different per-sample values for field \"{0}\", expected {1}, but got {2}",
+                                    FieldWithTag(dir.tdir_tag).Name, v[0].ToString(CultureInfo.InvariantCulture), v[i].ToString(CultureInfo.InvariantCulture));
+                                // not setting the failed flag
+                            }
+                            else // normal behavior
+                            {
+                                ErrorExt(this, m_clientdata, m_name,
+                                    "Cannot handle different per-sample values for field \"{0}\", expected {1}, but got {2}",
+                                    FieldWithTag(dir.tdir_tag).Name, v[0].ToString(CultureInfo.InvariantCulture), v[i].ToString(CultureInfo.InvariantCulture));
+                                failed = true;
+                            }
                             break;
                         }
                     }

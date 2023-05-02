@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using BitMiracle.LibTiff.Classic.Internal;
@@ -128,6 +129,40 @@ namespace BitMiracle.LibTiff.Classic
         public static int GetA(int abgr)
         {
             return ((abgr >> 24) & 0xff);
+        }
+        
+        /// <summary>
+        /// Adding tags as exception for not throwing an error when the sample entries differ.
+        /// </summary>
+        /// <param name="additionalTags">The tags to change the error message to an warning.</param>
+        public static void AddIgnoredDuplicateTags(params TiffTag[] additionalTags)
+        {
+            if (additionalTags == null || additionalTags.Length == 0) return;
+            IgnoreDuplicateError = IgnoreDuplicateError ?? new HashSet<TiffTag>();
+            IgnoreDuplicateError.UnionWith(additionalTags);
+        }
+
+
+        /// <summary>
+        /// Removing tags as exception for not throwing an error when the sample entries differ.
+        /// </summary>
+        /// <param name="removeTags">The tags to not change the error message to an warning anymore.</param>
+        public static void RemoveIgnoredDuplicateTags(params TiffTag[] removeTags)
+        {
+            if (removeTags == null ||
+                removeTags.Length == 0 ||
+                IgnoreDuplicateError == null ||
+                IgnoreDuplicateError.Count == 0) return;
+            IgnoreDuplicateError.ExceptWith(removeTags);
+        }
+
+        /// <summary>
+        ///  Get the tags as exception for not throwing an error when the sample entries differ.
+        /// </summary>
+        /// <returns>The tags currently used as exception.</returns>
+        public static TiffTag[] GetIgnoredDuplicateTags()
+        {
+            return IgnoreDuplicateError?.ToArray();
         }
 
         /// <summary>

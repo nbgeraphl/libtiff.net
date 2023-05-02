@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -46,6 +47,7 @@ namespace BitMiracle.LibTiff.Classic
         internal const bool CHECK_JPEG_YCBCR_SUBSAMPLING = true;
 
         internal static readonly Encoding Latin1Encoding = Encoding.GetEncoding("Latin1");
+        internal static HashSet<TiffTag> IgnoreDuplicateError;
 
         internal enum PostDecodeMethodType
         {
