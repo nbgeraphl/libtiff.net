@@ -2018,7 +2018,7 @@ namespace BitMiracle.LibTiff.Classic
                 for (x = width; x-- > 0; )
                 {
                     // use high order byte of 32bit value
-                    raster[rasterOffset] = BWmap[(wp[wpPos] & 0xffffffff)][0];
+                    raster[rasterOffset] = BWmap[(wp[wpPos] & 0xffffffff) >> 24][0];
                     rasterOffset++;
                     offset += 4 * samplesperpixel;
                     wpPos += samplesperpixel;
