@@ -326,6 +326,7 @@ namespace BitMiracle.LibTiff.Classic
                 case 4:
                 case 8:
                 case 16:
+                case 32:
                     break;
 
                 default:
@@ -1381,6 +1382,9 @@ namespace BitMiracle.LibTiff.Classic
                     {
                         switch (bitspersample)
                         {
+                            case 32:
+                                putContig = put32bitbwtile;
+                                break;
                             case 16:
                                 putContig = put16bitbwtile;
                                 break;
@@ -1596,7 +1600,7 @@ namespace BitMiracle.LibTiff.Classic
             int range = (1 << bitspersample) - 1;
 
             // treat 16 bit the same as eight bit
-            if (bitspersample == 16)
+            if (bitspersample == 16 || bitspersample == 32)
                 range = 255;
 
             Map = new byte[range + 1];
@@ -1612,7 +1616,7 @@ namespace BitMiracle.LibTiff.Classic
                     Map[x] = (byte)((x * 255) / range);
             }
 
-            if (bitspersample <= 16 && (photometric == Photometric.MINISBLACK || photometric == Photometric.MINISWHITE))
+            if (bitspersample <= 32 && (photometric == Photometric.MINISBLACK || photometric == Photometric.MINISWHITE))
             {
                 // Use photometric mapping table to construct unpacking tables for samples <= 8 bits.
                 if (!makebwmap())
@@ -1733,6 +1737,7 @@ namespace BitMiracle.LibTiff.Classic
                         break;
                     case 8:
                     case 16:
+                    case 32:
                         GREY(i, i, ref j);
                         break;
                 }
@@ -1987,6 +1992,35 @@ namespace BitMiracle.LibTiff.Classic
                     raster[rasterOffset] = BWmap[(wp[wpPos] & 0xffff) >> 8][0];
                     rasterOffset++;
                     offset += 2 * samplesperpixel;
+                    wpPos += samplesperpixel;
+                }
+
+                rasterOffset += rasterShift;
+                offset += bufferShift;
+            }
+        }
+
+        /// <summary>
+        /// 32-bit greyscale => colormap/RGB
+        /// </summary>
+        private static void put32bitbwtile(
+            TiffRgbaImage img, int[] raster, int rasterOffset, int rasterShift,
+            int x, int y, int width, int height, byte[] buffer, int offset, int bufferShift)
+        {
+            int samplesperpixel = img.samplesperpixel;
+            int[][] BWmap = img.BWmap;
+
+            while (height-- > 0)
+            {
+                int[] wp = Tiff.ByteArrayToInts(buffer, offset, buffer.Length - offset);
+                int wpPos = 0;
+
+                for (x = width; x-- > 0; )
+                {
+                    // use high order byte of 32bit value
+                    raster[rasterOffset] = BWmap[(wp[wpPos] & 0xffffffff)][0];
+                    rasterOffset++;
+                    offset += 4 * samplesperpixel;
                     wpPos += samplesperpixel;
                 }
 
